@@ -26,7 +26,7 @@ fn main() {
     match matches.subcommand() {
         Some(("install", subcommand)) => {
             let repo = subcommand.get_one::<String>("Repository").unwrap();
-            install(&repo, &config.token.unwrap(), config.install_path.unwrap().as_ref());
+            install(&repo, &config.token.unwrap(), config.install_path.as_ref());
         }
         _ => {}
     }
