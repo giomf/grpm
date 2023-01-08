@@ -2,6 +2,7 @@ mod archive;
 mod config;
 mod print;
 mod repo;
+mod database;
 
 use std::path::Path;
 
@@ -17,24 +18,15 @@ fn main() {
                     .required(true),
             ),
         )
-        .arg(
-            Arg::new("Config")
-                .short('c')
-                .long("config")
-                .help("Configuration path")
-                .default_value("~/.config/grpm/config.toml"),
-        )
         .get_matches();
 
-    let config_path = shellexpand::tilde(matches.get_one::<String>("Config").unwrap());
-    let config_path = Path::new(config_path.as_ref());
-    let config = config::parse_config(config_path);
+    config::create_default_folders();
+    let config = config::get_config();
 
     match matches.subcommand() {
         Some(("install", subcommand)) => {
             let repo = subcommand.get_one::<String>("Repository").unwrap();
-            let install_path = Path::new(&config.install_path);
-            install(&repo, &config.token, install_path);
+            install(&repo, &config.token.unwrap(), config.install_path.unwrap().as_ref());
         }
         _ => {}
     }
