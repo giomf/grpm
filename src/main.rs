@@ -8,8 +8,6 @@ use std::path::Path;
 use clap::{command, Arg, Command};
 use tempfile::NamedTempFile;
 
-const INSTALL_PATH: &str = "~/.local/bin/";
-
 fn main() {
     let matches = command!()
         .subcommand(
@@ -35,14 +33,14 @@ fn main() {
     match matches.subcommand() {
         Some(("install", subcommand)) => {
             let repo = subcommand.get_one::<String>("Repository").unwrap();
-            install(&repo, &config.token);
+            let install_path = Path::new(&config.install_path);
+            install(&repo, &config.token, install_path);
         }
         _ => {}
     }
 }
 
-pub fn install(repo: &str, token: &str) {
-    let install_path = shellexpand::tilde(INSTALL_PATH);
+pub fn install(repo: &str, token: &str, install_path: &Path) {
 
     let tmp_download_file = NamedTempFile::new().unwrap();
     let tmp_decompress_file = NamedTempFile::new().unwrap();
@@ -66,8 +64,8 @@ pub fn install(repo: &str, token: &str) {
         return;
     }
 
-    println!("Installing {} to {}", tar_infos[0].name, &install_path);
-    archive::unpacking_archive(tmp_decompress_file.path(), Path::new(install_path.as_ref()));
+    println!("Installing {} to {}", tar_infos[0].name, install_path.to_str().unwrap());
+    archive::unpacking_archive(tmp_decompress_file.path(), install_path);
 
     println!("Done!");
 }

@@ -11,5 +11,10 @@ pub struct Config {
 
 pub fn parse_config(path: &Path) -> Config{
     let content = fs::read_to_string(path).unwrap();
-    toml::from_str(&content).unwrap()
+    let config: Config = toml::from_str(&content).unwrap();
+    
+    Config {
+        install_path: shellexpand::tilde(&config.install_path).to_string(),
+        ..config
+    }
 }
