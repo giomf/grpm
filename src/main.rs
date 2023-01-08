@@ -1,4 +1,5 @@
 mod archive;
+mod config;
 mod print;
 mod repo;
 
@@ -12,30 +13,29 @@ const INSTALL_PATH: &str = "~/.local/bin/";
 fn main() {
     let matches = command!()
         .subcommand(
-            Command::new("install")
-                .about("Installs a release")
-                .arg(
-                    Arg::new("Token")
-                        .short('t')
-                        .long("token")
-                        .help("Github access token")
-                        .required(true),
-                )
-                .arg(
-                    Arg::new("Repository")
-                        .short('r')
-                        .long("repo")
-                        .help("Repository owner/repository")
-                        .required(true),
-                ),
+            Command::new("install").about("Installs a release").arg(
+                Arg::new("Repository")
+                    .help("Repository owner/repository")
+                    .required(true),
+            ),
+        )
+        .arg(
+            Arg::new("Config")
+                .short('c')
+                .long("config")
+                .help("Configuration path")
+                .default_value("~/.config/grpm/config.toml"),
         )
         .get_matches();
 
+    let config_path = shellexpand::tilde(matches.get_one::<String>("Config").unwrap());
+    let config_path = Path::new(config_path.as_ref());
+    let config = config::parse_config(config_path);
+
     match matches.subcommand() {
         Some(("install", subcommand)) => {
-            let token = subcommand.get_one::<String>("Token").unwrap();
             let repo = subcommand.get_one::<String>("Repository").unwrap();
-            install(&repo, &token);
+            install(&repo, &config.token);
         }
         _ => {}
     }
