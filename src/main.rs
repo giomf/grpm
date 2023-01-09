@@ -8,6 +8,9 @@ use std::path::Path;
 
 use clap::{command, Arg, Command};
 use tempfile::NamedTempFile;
+use database::Database;
+
+use crate::database::Package;
 
 fn main() {
     let matches = command!()
@@ -22,17 +25,19 @@ fn main() {
 
     config::create_default_folders();
     let config = config::get_config();
+    let database = Database::new(config::get_database_path()).unwrap();
+
 
     match matches.subcommand() {
         Some(("install", subcommand)) => {
             let repo = subcommand.get_one::<String>("Repository").unwrap();
-            install(&repo, &config.token.unwrap(), config.install_path.as_ref());
+            install(&database, &repo, &config.token.unwrap(), config.install_path.as_ref());
         }
         _ => {}
     }
 }
 
-pub fn install(repo: &str, token: &str, install_path: &Path) {
+pub fn install(database: &Database, repo: &str, token: &str, install_path: &Path) {
 
     let tmp_download_file = NamedTempFile::new().unwrap();
     let tmp_decompress_file = NamedTempFile::new().unwrap();
@@ -58,6 +63,14 @@ pub fn install(repo: &str, token: &str, install_path: &Path) {
 
     println!("Installing {} to {}", tar_infos[0].name, install_path.to_str().unwrap());
     archive::unpacking_archive(tmp_decompress_file.path(), install_path);
+
+    let package = Package {
+        name: repo_info.name,
+        version: repo_info.version,
+        path: install_path.into()
+    };
+
+    database.put(&package.name, &package).unwrap();
 
     println!("Done!");
 }

@@ -45,6 +45,10 @@ pub fn create_default_folders() {
     fs::create_dir_all(get_default_data_path()).unwrap();
 }
 
+pub fn get_database_path() -> PathBuf {
+    get_default_data_path().join("packages.db")
+}
+
 fn get_default_config_path() -> PathBuf {
     let base_path = std::env::var("XDG_CONFIG_HOME").unwrap_or("~/.config".to_string());
     let base_path = shellexpand::tilde(&base_path);
