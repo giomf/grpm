@@ -2,7 +2,7 @@ use jammdb::DB;
 use serde::{Deserialize, Serialize};
 use std::{
     error::Error,
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 const BUCKET_NAME: &str = "PACKAGES";
@@ -15,6 +15,7 @@ pub struct Database {
 pub struct Package {
     pub name: String,
     pub version: String,
+    pub binary: String,
     pub path: String,
 }
 
@@ -36,6 +37,14 @@ impl Database {
         let bucket = tx.get_bucket(BUCKET_NAME)?;
         let value = bincode::serialize(&package)?;
         bucket.put(key.as_bytes(), value)?;
+        tx.commit()?;
+        Ok(())
+    }
+    
+    pub fn remove(&self, key: &str) -> Result<(), Box<dyn Error>>{
+        let tx = self.database.tx(true)?;
+        let bucket = tx.get_bucket(BUCKET_NAME)?;
+        bucket.delete(key)?;
         tx.commit()?;
         Ok(())
     }
@@ -64,7 +73,6 @@ impl Database {
 
 #[cfg(test)]
 mod tests {
-    use crate::database;
 
     use super::*;
     use std::{fs, path::Path};
@@ -94,6 +102,7 @@ mod tests {
             name: "Test Package".to_string(),
             path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
+            binary: "test".to_string()
         };
         db.put(key, &package).unwrap();
         let result = db.get(key).unwrap();
@@ -111,13 +120,32 @@ mod tests {
             name: "Test Package".to_string(),
             path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
+            binary: "test".to_string()
+
         };
 
         db.put(key1, &package).unwrap();
         db.put(key2, &package).unwrap();
-
+        
         let packages = db.get_all().unwrap();
-
+        
         assert!(packages.len() == 2);
+    }
+    
+    #[test]
+    fn delete() {
+        let db = setup();
+        let key = "Test";
+        let package = Package {
+            name: "Test Package".to_string(),
+            path: "/test/path".to_string(),
+            version: "v1.2.3".to_string(),
+            binary: "test".to_string()
+
+        };
+        db.put(key, &package).unwrap();
+        db.remove(key).unwrap();
+        let result = db.get(key).unwrap();
+        assert!(result.is_none());
     }
 }
