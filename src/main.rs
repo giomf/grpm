@@ -1,14 +1,14 @@
 mod archive;
 mod config;
+mod database;
 mod print;
 mod repo;
-mod database;
 
 use std::path::Path;
 
 use clap::{command, Arg, Command};
-use tempfile::NamedTempFile;
 use database::Database;
+use tempfile::NamedTempFile;
 
 use crate::database::Package;
 
@@ -21,24 +21,45 @@ fn main() {
                     .required(true),
             ),
         )
+        .subcommand(Command::new("list").about("Lists all installed releases"))
         .get_matches();
 
     config::create_default_folders();
     let config = config::get_config();
     let database = Database::new(config::get_database_path()).unwrap();
 
-
     match matches.subcommand() {
         Some(("install", subcommand)) => {
             let repo = subcommand.get_one::<String>("Repository").unwrap();
-            install(&database, &repo, &config.token.unwrap(), config.install_path.as_ref());
+            install(
+                &database,
+                &repo,
+                &config.token.unwrap(),
+                config.install_path.as_ref(),
+            );
+        }
+        Some (("list", _)) => {
+            list(&database);
         }
         _ => {}
     }
 }
 
-pub fn install(database: &Database, repo: &str, token: &str, install_path: &Path) {
 
+
+fn list(database: &Database){
+
+    let packages = database.get_all().unwrap();
+    if packages.is_empty() {
+        println!("No packages installed yet");
+        return;
+    }
+    print::print_packages(packages);
+}
+
+
+
+fn install(database: &Database, repo: &str, token: &str, install_path: &Path) {
     let tmp_download_file = NamedTempFile::new().unwrap();
     let tmp_decompress_file = NamedTempFile::new().unwrap();
 
@@ -61,13 +82,17 @@ pub fn install(database: &Database, repo: &str, token: &str, install_path: &Path
         return;
     }
 
-    println!("Installing {} to {}", tar_infos[0].name, install_path.to_str().unwrap());
+    println!(
+        "Installing {} to {}",
+        tar_infos[0].name,
+        install_path.to_str().unwrap()
+    );
     archive::unpacking_archive(tmp_decompress_file.path(), install_path);
 
     let package = Package {
         name: repo_info.name,
         version: repo_info.version,
-        path: install_path.into()
+        path: install_path.to_string_lossy().to_string(),
     };
 
     database.put(&package.name, &package).unwrap();

@@ -1,6 +1,9 @@
 use jammdb::DB;
 use serde::{Deserialize, Serialize};
-use std::{error::Error, path::{PathBuf, Path}};
+use std::{
+    error::Error,
+    path::{Path, PathBuf},
+};
 
 const BUCKET_NAME: &str = "PACKAGES";
 
@@ -12,7 +15,7 @@ pub struct Database {
 pub struct Package {
     pub name: String,
     pub version: String,
-    pub path: PathBuf,
+    pub path: String,
 }
 
 impl Database {
@@ -45,10 +48,24 @@ impl Database {
         }
         Ok(None)
     }
+
+    pub fn get_all(&self) -> Result<Vec<Package>, Box<dyn Error>> {
+        let tx = self.database.tx(false)?;
+        let mut packages: Vec<Package> = Vec::new();
+        for data in tx.get_bucket(BUCKET_NAME)?.cursor() {
+            if let jammdb::Data::KeyValue(kv) = &*data {
+                let package: Package = bincode::deserialize(kv.value())?;
+                packages.push(package)
+            }
+        }
+        Ok(packages)
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::database;
+
     use super::*;
     use std::{fs, path::Path};
     static PATH: &str = "test.db";
@@ -75,12 +92,32 @@ mod tests {
         let key = "Test";
         let package = Package {
             name: "Test Package".to_string(),
-            path: PathBuf::from("/test/path"),
+            path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
         };
         db.put(key, &package).unwrap();
         let result = db.get(key).unwrap();
         assert!(result.is_some());
         assert_eq!(result.unwrap(), package);
+    }
+
+    #[test]
+    fn get_all() {
+        let db = setup();
+        let key1 = "Test1";
+        let key2 = "Test2";
+
+        let package = Package {
+            name: "Test Package".to_string(),
+            path: "/test/path".to_string(),
+            version: "v1.2.3".to_string(),
+        };
+
+        db.put(key1, &package).unwrap();
+        db.put(key2, &package).unwrap();
+
+        let packages = db.get_all().unwrap();
+
+        assert!(packages.len() == 2);
     }
 }

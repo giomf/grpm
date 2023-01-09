@@ -2,6 +2,7 @@ use prettytable::{format, Cell, Row, Table};
 
 use crate::{
     archive::TarInfo,
+    database::Package,
     repo::{AssetInfo, Repoinfo},
 };
 
@@ -13,6 +14,11 @@ pub fn print_repo_info(repo: &Repoinfo) {
     println!("");
     asset_table.print_tty(true).unwrap();
     println!("");
+}
+
+pub fn print_packages(packages: Vec<Package>){
+    let table = create_packages_table(packages);
+    table.print_tty(true).unwrap();
 }
 
 pub fn _print_binaries(tar_infos: &Vec<TarInfo>) {
@@ -44,6 +50,30 @@ pub fn _print_binaries(tar_infos: &Vec<TarInfo>) {
 pub fn print_index_question(question: &str) -> usize {
     print!("{}: ", question);
     text_io::read!()
+}
+
+fn create_packages_table(packages: Vec<Package>) -> Table{
+    let mut table = Table::new();
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+    let headers = Row::new(vec![
+        Cell::new("Package"),
+        Cell::new("Version"),
+        Cell::new("Path"),
+    ]);
+
+    table.set_titles(headers);
+
+    for package in packages {
+        let package_row = Row::new(vec![
+            Cell::new(&package.name),
+            Cell::new(&package.version),
+            Cell::new(&package.path)
+        ]);
+        table.add_row(package_row);
+    }
+
+    table
 }
 
 fn create_repo_table(repo: &Repoinfo) -> Table {
