@@ -20,7 +20,7 @@ pub struct Package {
 }
 
 impl Database {
-    pub fn new(path: impl AsRef<Path>) -> Result<Database, Box<dyn Error>> {
+    pub fn new(path: impl AsRef<Path>) -> Result<Database, jammdb::Error> {
         let database = DB::open(path)?;
         let tx = database.tx(true)?;
 
@@ -41,7 +41,7 @@ impl Database {
         Ok(())
     }
     
-    pub fn remove(&self, key: &str) -> Result<(), Box<dyn Error>>{
+    pub fn remove(&self, key: &str) -> Result<(), jammdb::Error>{
         let tx = self.database.tx(true)?;
         let bucket = tx.get_bucket(BUCKET_NAME)?;
         bucket.delete(key)?;
