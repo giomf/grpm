@@ -1,6 +1,21 @@
-# **G**ithub **R**elease **P**ackage **M**anager (GRPM)
+# Github Release Package Manager (GRPM)
 GRPM is a CLI tool to install single binary releases directly from Github. 
 
+## Help
+```
+$ grpm help
+Usage: grpm [COMMAND]
+
+Commands:
+  install    Installs a package
+  uninstall  Uninstalls a package
+  list       Lists all installed packages
+  help       Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help information
+  -V, --version  Print version information
+```
 ## Install
 ```
 $ grpm install zellij-org/zellij
@@ -38,3 +53,15 @@ $ grpm list
 ```
 $ grpm uninstall zellij
 ```
+
+## Config
+GRPM uses *$XDG_CONFIG_HOME/grpm* and as fallback *~/.config/grpm* as configuration folder.  
+A configuration named config.toml must be located in this folder.
+```
+token = "YOUR_TOKEN" # Your Github access token - Read only is sufficient
+install_path = "~/.local/bin" # Default installation path
+```
+
+## Package Database
+GRPM tracks the installed packages in a database.  
+The database is located at *$XDG_DATA_HOME/grpm/*. If not set *~/.local/share/grpm* is used.
