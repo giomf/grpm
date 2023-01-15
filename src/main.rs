@@ -34,6 +34,7 @@ fn create_arg_matches() -> ArgMatches {
             ),
         )
         .subcommand(Command::new("list").about("Lists all installed packages"))
+        .subcommand(Command::new("update").about("Updates all installed packages"))
         .get_matches()
 }
 
@@ -51,41 +52,44 @@ fn main() {
                 &config.token.unwrap(),
                 config.install_path.as_ref(),
             ) {
-                if let Some(err) = error.downcast_ref::<attohttpc::Error>() {
-                    eprintln!("HTTP Error: {}", err);
-                } else if let Some(err) = error.downcast_ref::<io::Error>() {
-                    eprintln!("I/O Error: {}", err);
-                } else if let Some(err) = error.downcast_ref::<jammdb::Error>() {
-                    eprintln!("Database Error: {}", err);
-                } else {
-                    eprintln!("Unknown Error: {}", error);
-                }
+                handle_error(error);
             }
         }
 
         Some(("uninstall", subcommand)) => {
             let package_name = subcommand.get_one::<String>("Package").unwrap();
             if let Err(error) = uninstall(&database, &package_name) {
-                if let Some(err) = error.downcast_ref::<io::Error>() {
-                    eprintln!("I/O Error: {}", err);
-                } else if let Some(err) = error.downcast_ref::<jammdb::Error>() {
-                    eprintln!("Database Error: {}", err);
-                } else {
-                    eprintln!("Unknown Error: {}", error);
-                }
+                handle_error(error);
             }
         }
         Some(("list", _)) => {
             if let Err(error) = list(&database) {
-                if let Some(err) = error.downcast_ref::<jammdb::Error>() {
-                    eprintln!("Database Error: {}", err);
-                } else {
-                    eprintln!("Unknown Error: {}", error);
-                }
+                handle_error(error);
+            }
+        }
+        Some(("update", _)) => {
+            if let Err(error) = update() {
+                handle_error(error);
             }
         }
         _ => {}
     }
+}
+
+fn handle_error(error: Box<dyn Error>) {
+    if let Some(error) = error.downcast_ref::<attohttpc::Error>() {
+        eprintln!("HTTP Error: {}", error);
+    } else if let Some(err) = error.downcast_ref::<io::Error>() {
+        eprintln!("I/O Error: {}", err);
+    } else if let Some(err) = error.downcast_ref::<jammdb::Error>() {
+        eprintln!("Database Error: {}", err);
+    } else {
+        eprintln!("Unknown Error: {}", error);
+    }
+}
+
+fn update()-> Result<(), Box<dyn Error>>{
+    todo!()
 }
 
 fn list(database: &Database) -> Result<(), Box<dyn Error>> {
