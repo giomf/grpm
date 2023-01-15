@@ -14,6 +14,7 @@ pub struct Database {
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct Package {
     pub name: String,
+    pub full_name: String,
     pub version: String,
     pub binary: String,
     pub path: String,
@@ -100,6 +101,7 @@ mod tests {
         let key = "Test";
         let package = Package {
             name: "Test Package".to_string(),
+            full_name: "Test/Package".to_string(),
             path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
             binary: "test".to_string()
@@ -118,6 +120,7 @@ mod tests {
 
         let package = Package {
             name: "Test Package".to_string(),
+            full_name: "Test/Package".to_string(),
             path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
             binary: "test".to_string()
@@ -138,6 +141,7 @@ mod tests {
         let key = "Test";
         let package = Package {
             name: "Test Package".to_string(),
+            full_name: "Test/Package".to_string(),
             path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
             binary: "test".to_string()

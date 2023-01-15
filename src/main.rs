@@ -135,6 +135,7 @@ fn install(
 
     let package = Package {
         name: repo_info.name,
+        full_name: repo_info.full_name,
         version: repo_info.version,
         path: install_path.to_string_lossy().to_string(),
         binary: tar_infos[0].name.to_string(),

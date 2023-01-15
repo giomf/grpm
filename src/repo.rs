@@ -9,6 +9,7 @@ use octocrab::models::{repos::Release, Repository};
 
 pub struct Repoinfo {
     pub name: String,
+    pub full_name: String,
     pub description: Option<String>,
     pub version: String,
     pub assets: Vec<AssetInfo>,
@@ -50,6 +51,7 @@ pub fn get_repo_infos(repo: &str, token: &str) -> Result<Repoinfo, Error> {
 
     let repo_info = Repoinfo {
         name: repository.name,
+        full_name: repo.to_string(),
         description: repository.description,
         version: release.tag_name,
         assets: release
