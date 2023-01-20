@@ -1,9 +1,6 @@
 use jammdb::DB;
 use serde::{Deserialize, Serialize};
-use std::{
-    error::Error,
-    path::Path,
-};
+use std::{error::Error, path::Path};
 
 const BUCKET_NAME: &str = "PACKAGES";
 
@@ -41,8 +38,8 @@ impl Database {
         tx.commit()?;
         Ok(())
     }
-    
-    pub fn remove(&self, key: &str) -> Result<(), jammdb::Error>{
+
+    pub fn remove(&self, key: &str) -> Result<(), jammdb::Error> {
         let tx = self.database.tx(true)?;
         let bucket = tx.get_bucket(BUCKET_NAME)?;
         bucket.delete(key)?;
@@ -104,7 +101,7 @@ mod tests {
             full_name: "Test/Package".to_string(),
             path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
-            binary: "test".to_string()
+            binary: "test".to_string(),
         };
         db.put(key, &package).unwrap();
         let result = db.get(key).unwrap();
@@ -123,18 +120,17 @@ mod tests {
             full_name: "Test/Package".to_string(),
             path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
-            binary: "test".to_string()
-
+            binary: "test".to_string(),
         };
 
         db.put(key1, &package).unwrap();
         db.put(key2, &package).unwrap();
-        
+
         let packages = db.get_all().unwrap();
-        
+
         assert!(packages.len() == 2);
     }
-    
+
     #[test]
     fn delete() {
         let db = setup();
@@ -144,8 +140,7 @@ mod tests {
             full_name: "Test/Package".to_string(),
             path: "/test/path".to_string(),
             version: "v1.2.3".to_string(),
-            binary: "test".to_string()
-
+            binary: "test".to_string(),
         };
         db.put(key, &package).unwrap();
         db.remove(key).unwrap();

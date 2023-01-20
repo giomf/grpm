@@ -7,7 +7,7 @@ use std::{
 use attohttpc::{Error, RequestBuilder};
 use octocrab::models::{repos::Release, Repository};
 
-pub struct Repoinfo {
+pub struct RepoInfo {
     pub name: String,
     pub full_name: String,
     pub description: Option<String>,
@@ -45,13 +45,13 @@ fn get_latest_release(repo: &str, token: &str) -> Result<Release, Error> {
     Ok(response.json()?)
 }
 
-pub fn get_repo_infos(repo: &str, token: &str) -> Result<Repoinfo, Error> {
-    let repository = get_repo(repo, token)?;
-    let release = get_latest_release(repo, token)?;
+pub fn get_repo_infos(full_name: &str, token: &str) -> Result<RepoInfo, Error> {
+    let repository = get_repo(full_name, token)?;
+    let release = get_latest_release(full_name, token)?;
 
-    let repo_info = Repoinfo {
+    let repo_info = RepoInfo {
         name: repository.name,
-        full_name: repo.to_string(),
+        full_name: full_name.to_string(),
         description: repository.description,
         version: release.tag_name,
         assets: release

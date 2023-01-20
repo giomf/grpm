@@ -13,6 +13,7 @@ use std::{
 use clap::{command, Arg, ArgMatches, Command};
 use config::Config;
 use database::Database;
+use repo::RepoInfo;
 use tempfile::NamedTempFile;
 
 use crate::database::Package;
@@ -68,7 +69,7 @@ fn main() {
             }
         }
         Some(("update", _)) => {
-            if let Err(error) = update() {
+            if let Err(error) = update(&database, &config.token.unwrap()) {
                 handle_error(error);
             }
         }
@@ -88,8 +89,29 @@ fn handle_error(error: Box<dyn Error>) {
     }
 }
 
-fn update()-> Result<(), Box<dyn Error>>{
-    todo!()
+fn update(database: &Database, token: &str) -> Result<(), Box<dyn Error>> {
+
+    let installed_packages = database.get_all()?;
+    let mut updateable_packages: Vec<(Package, RepoInfo)> = Vec::new();
+    if installed_packages.is_empty() {
+        println!("No packages installed yet");
+        return Ok(());
+    }
+
+    for package in installed_packages {
+        let repo_info = repo::get_repo_infos(&package.full_name, token)?;
+        if package.version == repo_info.version {
+            updateable_packages.push((package, repo_info));
+        }
+    }
+
+    if updateable_packages.is_empty() {
+        println!("No updates available");
+        return Ok(());
+    }
+
+    print::print_updates(&updateable_packages);
+    Ok(())
 }
 
 fn list(database: &Database) -> Result<(), Box<dyn Error>> {
@@ -97,7 +119,7 @@ fn list(database: &Database) -> Result<(), Box<dyn Error>> {
     if packages.is_empty() {
         println!("No packages installed yet");
     } else {
-        print::print_packages(packages);
+        print::print_packages(&packages);
     }
     Ok(())
 }

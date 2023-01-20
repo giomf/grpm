@@ -3,10 +3,10 @@ use prettytable::{format, Cell, Row, Table};
 use crate::{
     archive::TarInfo,
     database::Package,
-    repo::{AssetInfo, Repoinfo},
+    repo::{AssetInfo, RepoInfo},
 };
 
-pub fn print_repo_info(repo: &Repoinfo) {
+pub fn print_repo_info(repo: &RepoInfo) {
     let repo_table = create_repo_table(&repo);
     let asset_table = create_asset_table(&repo.assets);
 
@@ -16,8 +16,8 @@ pub fn print_repo_info(repo: &Repoinfo) {
     println!("");
 }
 
-pub fn print_packages(packages: Vec<Package>){
-    let table = create_packages_table(packages);
+pub fn print_packages(packages: &Vec<Package>) {
+    let table = create_packages_table(&packages);
     table.print_tty(true).unwrap();
 }
 
@@ -47,12 +47,17 @@ pub fn _print_binaries(tar_infos: &Vec<TarInfo>) {
     println!("");
 }
 
+pub fn print_updates(updateable_packages: &Vec<(Package, RepoInfo)>) {
+    let table = create_update_table(updateable_packages);
+    table.print_tty(true).unwrap();
+}
+
 pub fn print_index_question(question: &str) -> usize {
     print!("{}: ", question);
     text_io::read!()
 }
 
-fn create_packages_table(packages: Vec<Package>) -> Table{
+fn create_packages_table(packages: &Vec<Package>) -> Table {
     let mut table = Table::new();
     table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
 
@@ -68,7 +73,7 @@ fn create_packages_table(packages: Vec<Package>) -> Table{
         let package_row = Row::new(vec![
             Cell::new(&package.name),
             Cell::new(&package.version),
-            Cell::new(&package.path)
+            Cell::new(&package.path),
         ]);
         table.add_row(package_row);
     }
@@ -76,7 +81,7 @@ fn create_packages_table(packages: Vec<Package>) -> Table{
     table
 }
 
-fn create_repo_table(repo: &Repoinfo) -> Table {
+fn create_repo_table(repo: &RepoInfo) -> Table {
     let mut table = Table::new();
     table.set_format(*format::consts::FORMAT_CLEAN);
 
@@ -131,6 +136,30 @@ fn create_asset_table(assets: &Vec<AssetInfo>) -> Table {
             Cell::new(downloads).style_spec("r"),
         ]);
         table.add_row(asset_row);
+    }
+
+    table
+}
+
+fn create_update_table(updatable_packages: &Vec<(Package, RepoInfo)>) -> Table {
+    let mut table = Table::new();
+    table.set_format(*format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+
+    let headers = Row::new(vec![
+        Cell::new("Package"),
+        Cell::new("Current version"),
+        Cell::new("Available version"),
+    ]);
+
+    table.set_titles(headers);
+
+    for package in updatable_packages {
+        let package_row = Row::new(vec![
+            Cell::new(&package.0.name),
+            Cell::new(&package.0.version),
+            Cell::new(&package.1.version),
+        ]);
+        table.add_row(package_row);
     }
 
     table
